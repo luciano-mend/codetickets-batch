@@ -9,9 +9,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,8 +18,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Configuration
 public class ImportacaoJobConfiguration {
@@ -41,6 +37,7 @@ public class ImportacaoJobConfiguration {
         return new StepBuilder("passo-inicial", jobRepository)
                 .<Importacao, Importacao>chunk(200, transactionManager)
                 .reader(reader)
+                .processor(processor())
                 .writer(writer)
                 .build();
     }
@@ -63,10 +60,15 @@ public class ImportacaoJobConfiguration {
         return new JdbcBatchItemWriterBuilder<Importacao>()
                 .dataSource(dataSource)
                 .sql(
-                        "INSERT INTO importacao (cpf, cliente, nascimento, evento, data, tipo_ingresso, valor, hora_importacao) VALUES" +
-                                " (:cpf, :cliente, :nascimento, :evento, :data, :tipoIngresso, :valor, :horaImportacao )"
+                        "INSERT INTO importacao (cpf, cliente, nascimento, evento, data, tipo_ingresso, valor, hora_importacao, taxa_adm) VALUES" +
+                                " (:cpf, :cliente, :nascimento, :evento, :data, :tipoIngresso, :valor, :horaImportacao, :taxaAdm )"
                 )
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
                 .build();
+    }
+
+    @Bean
+    public ImportacaoProcessor processor() {
+        return new ImportacaoProcessor();
     }
 }
