@@ -1,4 +1,4 @@
-package br.luciano.codetickets;
+package br.luciano.codetickets.controllers;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
@@ -12,18 +12,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class ImportacaoController {
+public class MovimentacaoController {
 
     @Autowired
     private JobLauncher jobLauncher;
 
     @Autowired
-    private Job importacaoJob;
+    private Job jobMovimentacao;
 
-    @GetMapping("/importar")
+    @GetMapping("/movimentacao/importar")
     public void importaArquivo() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         JobParameters jobParameters = new JobParameters();
-        jobLauncher.run(importacaoJob, jobParameters);
+        jobLauncher.run(jobMovimentacao, jobParameters);
 
     }
 

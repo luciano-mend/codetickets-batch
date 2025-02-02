@@ -1,6 +1,7 @@
 package br.luciano.codetickets;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
+import br.luciano.codetickets.readers.MovimentacaoReader;
+import br.luciano.codetickets.steps.MovimentacaoSteps;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -29,28 +30,35 @@ public class ImportacaoJobConfiguration {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
+    @Autowired
+    MovimentacaoSteps movimentacaoSteps;
+
+    @Autowired
+    MovimentacaoReader movimentacaoReader;
+
     @Bean
-    public Job job(Step passoInicial, JobRepository jobRepository) {
+    public Job importacaoJob(JobRepository jobRepository,ItemReader<Importacao> importacaoReader, ItemWriter<Importacao> importacaoWriter) {
         return new JobBuilder("geracao-tickets", jobRepository)
-                .start(passoInicial)
+                .start(passoInicial(importacaoReader, importacaoWriter, jobRepository))
                 .next(moverArquivosStep(jobRepository))
+                .next(movimentacaoSteps.movimentacaoInicial(movimentacaoReader.reader(), jobRepository))
                 .incrementer(new RunIdIncrementer())
                 .build();
     }
 
     @Bean
     @Primary
-    public Step passoinicial(ItemReader<Importacao> reader, ItemWriter<Importacao> writer, JobRepository jobRepository){
+    public Step passoInicial(ItemReader<Importacao> importacaoReader, ItemWriter<Importacao> importacaoWriter, JobRepository jobRepository){
         return new StepBuilder("passo-inicial", jobRepository)
                 .<Importacao, Importacao>chunk(200, transactionManager)
-                .reader(reader)
+                .reader(importacaoReader)
                 .processor(processor())
-                .writer(writer)
+                .writer(importacaoWriter)
                 .build();
     }
 
     @Bean
-    public ItemReader<Importacao> reader() {
+    public ItemReader<Importacao> importacaoReader() {
         return new FlatFileItemReaderBuilder<Importacao>()
                 .name("leitura-csv")
                 .resource(new FileSystemResource("files/dados.csv"))
@@ -63,7 +71,7 @@ public class ImportacaoJobConfiguration {
     }
 
     @Bean
-    public ItemWriter<Importacao> writer(DataSource dataSource) {
+    public ItemWriter<Importacao> importacaoWriter(DataSource dataSource) {
         return new JdbcBatchItemWriterBuilder<Importacao>()
                 .dataSource(dataSource)
                 .sql(
@@ -88,7 +96,7 @@ public class ImportacaoJobConfiguration {
                 pastaDestino.mkdirs();
             }
 
-            File[] arquivos = pastaOrigem.listFiles((dir, name) -> name.endsWith(".csv"));
+            File[] arquivos = pastaOrigem.listFiles((dir, name) -> name.endsWith("dos.csv"));
 
             if (arquivos != null) {
                 for (File arquivo : arquivos) {
