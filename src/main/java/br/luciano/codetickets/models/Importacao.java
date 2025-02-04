@@ -1,4 +1,4 @@
-package br.luciano.codetickets;
+package br.luciano.codetickets.models;
 
 import jakarta.persistence.*;
 

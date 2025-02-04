@@ -8,22 +8,24 @@ import org.springframework.batch.core.repository.JobExecutionAlreadyRunningExcep
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class MovimentacaoController {
+public class ImportacaoController {
 
     @Autowired
     private JobLauncher jobLauncher;
 
     @Autowired
-    private Job jobMovimentacao;
+    @Qualifier("importacaoJob")
+    private Job importacaoJob;
 
-    @GetMapping("/movimentacao/importar")
+    @GetMapping("/importar")
     public void importaArquivo() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         JobParameters jobParameters = new JobParameters();
-        jobLauncher.run(jobMovimentacao, jobParameters);
+        jobLauncher.run(importacaoJob, jobParameters);
 
     }
 

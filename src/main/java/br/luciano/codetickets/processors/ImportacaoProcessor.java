@@ -1,5 +1,6 @@
-package br.luciano.codetickets;
+package br.luciano.codetickets.processors;
 
+import br.luciano.codetickets.models.Importacao;
 import org.springframework.batch.item.ItemProcessor;
 
 public class ImportacaoProcessor implements ItemProcessor<Importacao, Importacao> {
